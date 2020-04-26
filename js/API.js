@@ -1,7 +1,9 @@
-function sendToAPI(responseArea, text){
-         const data = {text: text}
-         responseArea = postData('/post', data)
-     }
+    eventResponse = sse();
+
+    function sendToAPI(responseArea, text){
+             const data = {text: text}
+             responseArea = postData('/post', data)
+         }
       async function postData(url = '', data = {}) {
           // Default options are marked with *
             const response = await fetch(url, {
@@ -21,8 +23,20 @@ function sendToAPI(responseArea, text){
            document.getElementById('outputArea').value = text
       }
 
-     async function updateTextArea() {
+     async function updateTextArea(data) {
           const response = await fetch('/get')
           const text  = await response.text()
           document.getElementById('textArea').value = text
       }
+
+      function sse() {
+        const evtSource = new EventSource("/stream");
+        evtSource.addEventListener("ping", function(event) {
+            });
+        return  evtSource
+      }
+
+
+
+
+
