@@ -1,4 +1,6 @@
-    eventResponse = sse();
+   // eventResponse = sse();
+    sendText();
+
 
     function sendToAPI(responseArea, text){
              const data = {text: text}
@@ -29,11 +31,27 @@
           document.getElementById('textArea').value = text
       }
 
-      function sse() {
+     function sse() {
         const evtSource = new EventSource("/stream");
         evtSource.addEventListener("ping", function(event) {
             });
         return  evtSource
+      }
+
+      function sendText() {
+            const log = document.getElementById('textArea');
+
+
+            function updateValue(e) {
+              saveText(e.target.value)
+            }
+
+            log.addEventListener('input', updateValue);
+      }
+
+      function saveText(text) {
+             const data = {text:text}
+             postData('/save', data)
       }
 
 
