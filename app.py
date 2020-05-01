@@ -36,7 +36,7 @@ def save_text(head, strlen):
         app.bufferText = temp + app.bufferText[head:strlen]
 
 
-@app.route('/load', method=['GET'])
+@app.route('/load', methods=['GET'])
 def load_text():
     if app.bufferText is not None:
         return app.bufferText
