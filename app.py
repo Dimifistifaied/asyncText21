@@ -6,7 +6,7 @@ app = Flask(__name__, static_folder='', static_url_path='')
 app.ls = []
 app.message = None
 app.previous_message = None
-app.bufferText = []
+app.bufferText = ''
 app.userDict = {}
 
 
@@ -61,7 +61,7 @@ def stream(UUID):
             if UUID in app.userDict and app.userDict.get(UUID) != app.bufferText:
                 print(app.userDict.get(UUID), app.bufferText)
                 app.userDict.update({UUID: app.bufferText})
-                yield "event:'ping'\ndata:{}\n\n".format(app.bufferText)
+                yield "event: ping\ndata:{}\n\n".format(app.bufferText)
 
     return Response(eventstream(UUID), mimetype="text/event-stream")
 
