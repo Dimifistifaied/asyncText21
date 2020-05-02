@@ -1,4 +1,10 @@
-   // eventResponse = sse();
+    let UUID = null;
+    let eventResponse = null;
+
+    generateUUId().then(function () {
+         eventResponse = sse();
+    });
+
     sendText();
 
 
@@ -6,7 +12,7 @@
              const data = {text: text}
              responseArea = postData('/post', data)
          }
-      async function postData(url = '', data = {}) {
+         async function postData(url = '', data = {}) {
           // Default options are marked with *
             const response = await fetch(url, {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -32,8 +38,9 @@
       }
 
      function sse() {
-        const evtSource = new EventSource("/stream");
+        const evtSource = new EventSource(`/stream/${UUID}`);
         evtSource.addEventListener("ping", function(event) {
+            document.getElementById('textArea').value = event.json.data;
             });
         return  evtSource
       }
@@ -43,16 +50,23 @@
 
 
             function updateValue(e) {
-              saveText(e.target.value)
+              saveText(e.target.value, UUID)
             }
 
             log.addEventListener('input', updateValue);
       }
 
-      function saveText(text) {
-             const data = {text:text}
-             postData('/save', data)
+      function saveText(text, UUID) {
+          const data = {text: text, user:UUID}
+          postData('/save', data)
       }
+
+        async function generateUUId() {
+            UUID = await (await fetch('/generateUUID')).text()
+      }
+
+
+
 
 
 
