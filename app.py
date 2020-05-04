@@ -1,14 +1,13 @@
 from flask import Flask, render_template, request, abort, jsonify, Response
 from Infrastructure import Runnable as rn
-import uuid
+import uuid,json
 
 app = Flask(__name__, static_folder='', static_url_path='')
 app.ls = []
-app.message = None
-app.previous_message = None
 app.bufferText = ''
 app.userDict = {}
-
+app.compiled = ''
+app.currentID = ''
 
 @app.route('/')
 def init():
@@ -18,7 +17,7 @@ def init():
 @app.route('/generateUUID')
 def generate_uuid():
     uniqueID = str(uuid.uuid1())
-    app.userDict.update({uniqueID: ''})
+    app.userDict.update({uniqueID: ('','subscriber')})
     return uniqueID
 
 
@@ -46,22 +45,28 @@ def load_text():
 
 @app.route('/save', methods=['POST'])
 def save_text():
-    app.bufferText = request.json['text']
-    app.userDict.update({request.json['user']: app.bufferText})
-    return 'OK'
+    app.userDict.update({request.json['user']: (request.json['text'], 'writer')})
 
+    return 'OK'
 
 @app.route('/stream/<UUID>', methods=['GET'])
 def stream(UUID):
-
     def eventstream(UUID):
         while True:
             # Poll data from the database
             # and see if there's a new message
-            if UUID in app.userDict and app.userDict.get(UUID) != app.bufferText:
-                print(app.userDict.get(UUID), app.bufferText)
-                app.userDict.update({UUID: app.bufferText})
-                yield "event: ping\ndata:{}\n\n".format(app.bufferText)
+            if app.userDict.get(UUID)[1] == 'subscriber' and app.currentID is not UUID:
+                if app.currentID is not '' and app.userDict.get(UUID)[0] != app.userDict.get(app.currentID)[0]:
+                    dataJSON = json.dumps({"text": app.userDict.get(app.currentID)[0]})
+                    yield "event: ping\ndata:{}\n\n".format(dataJSON)
+
+            elif app.userDict.get(UUID)[1] == 'writer':
+                if app.userDict.get(UUID)[0] is not '':
+                    app.userDict.update({UUID: (app.userDict.get(UUID)[0], 'subscriber')})
+
+                    app.currentID = UUID
+                else:
+                    app.currentID = UUID
 
     return Response(eventstream(UUID), mimetype="text/event-stream")
 

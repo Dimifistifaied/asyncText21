@@ -12,9 +12,9 @@ function sendToAPI(responseArea, text) {
     const data = {
         text: text
     }
-    responseArea = postData('/post', data)
+    responseArea = postData('/post', data, 'yes')
 }
-async function postData(url = '', data = {}) {
+async function postData(url = '', data = {}, compile) {
     // Default options are marked with *
     const response = await fetch(url, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -29,8 +29,10 @@ async function postData(url = '', data = {}) {
         referrerPolicy: 'no-referrer', // no-referrer, *client
         body: JSON.stringify(data) // body data type must match "Content-Type" header
     });
-    const text = await response.json()
-    document.getElementById('outputArea').value = text
+    if(compile==='yes') {
+        const text = await response.text()
+        document.getElementById('outputArea').value = text
+    }
 }
 
 async function updateTextArea(data) {
@@ -42,7 +44,7 @@ async function updateTextArea(data) {
 function sse() {
     const evtSource = new EventSource(`/stream/${UUID}`);
     evtSource.addEventListener("ping", function(event) {
-        document.getElementById('textArea').value = event.data;
+        document.getElementById('textArea').value = JSON.parse(event.data).text;
     });
     return evtSource
 }

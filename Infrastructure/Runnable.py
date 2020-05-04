@@ -1,11 +1,9 @@
 from importlib import reload as rl
-import sys
+import sys, subprocess
 
 def createFile(pyCode):
-    strOfTemp = 'def main():\n\ttry:\n\t\treturn '
-    endOfTemp = '\n\texcept SyntaxError as err:\n\t\treturn err\n\nif __name__ == \'__main__\':\n\tmain()'
     f = open("temp.py", "w+")
-    f.write(strOfTemp + pyCode + endOfTemp)
+    f.write(pyCode)
     f.close()
 
     return executer()
@@ -14,14 +12,16 @@ def createFile(pyCode):
 def executer():
 
     try:
-        import temp
-        rl(temp)
-        response = temp.main()
-        return response
+        cmdCommand = "python temp.py"  # specify your cmd command
+        process = subprocess.Popen(cmdCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        if error is None:
+            print(output)
+            return output
+        else:
+            return error
     except (ModuleNotFoundError, SyntaxError, UnboundLocalError) as err:
-        if err is SyntaxError:
-            str = 'Internal error code, load of temp file not performed. HINT: syntax error in temp.py'
-            return str
+            return err
 
 
 
