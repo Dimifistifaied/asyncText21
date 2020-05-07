@@ -50,14 +50,14 @@ function sse() {
 }
 
 function sendText() {
-    const log = document.getElementById('textArea');
+    const textArea = document.getElementById('textArea');
 
 
     function updateValue(e) {
-        saveText(e.target.value, UUID)
+        saveText(textArea.value, UUID)
     }
 
-    log.addEventListener('input', updateValue);
+    textArea.addEventListener('keydown', updateValue);
 }
 
 function saveText(text, UUID) {

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, abort, jsonify, Response
 from Infrastructure import Runnable as rn
+from collections import deque
 import uuid,json
 
 app = Flask(__name__, static_folder='', static_url_path='')
@@ -17,7 +18,7 @@ def init():
 @app.route('/generateUUID')
 def generate_uuid():
     uniqueID = str(uuid.uuid1())
-    app.userDict.update({uniqueID: ('','subscriber')})
+    app.userDict.update({uniqueID: deque()})
     return uniqueID
 
 
@@ -45,7 +46,10 @@ def load_text():
 
 @app.route('/save', methods=['POST'])
 def save_text():
-    app.userDict.update({request.json['user']: (request.json['text'], 'writer')})
+    app.userDict.get(request.json['user']).append(request.json['text'])
+    for item in app.userDict.items():
+        if item[0] != request.json['user']:
+            item[1].append(request.json['text'])
 
     return 'OK'
 
@@ -55,18 +59,19 @@ def stream(UUID):
         while True:
             # Poll data from the database
             # and see if there's a new message
-            if app.userDict.get(UUID)[1] == 'subscriber' and app.currentID is not UUID:
-                if app.currentID is not '' and app.userDict.get(UUID)[0] != app.userDict.get(app.currentID)[0]:
-                    dataJSON = json.dumps({"text": app.userDict.get(app.currentID)[0]})
-                    yield "event: ping\ndata:{}\n\n".format(dataJSON)
+            # if app.userDict.get(UUID)[1] == 'subscriber' and app.currentID is not UUID:
+            #     if app.currentID is not '' and app.userDict.get(UUID)[0] != app.userDict.get(app.currentID)[0]:
 
-            elif app.userDict.get(UUID)[1] == 'writer':
-                if app.userDict.get(UUID)[0] is not '':
-                    app.userDict.update({UUID: (app.userDict.get(UUID)[0], 'subscriber')})
+            # elif app.userDict.get(UUID)[1] == 'writer':
+            #     if app.userDict.get(UUID)[0] is not '':
+            #         app.userDict.update({UUID: (app.userDict.get(UUID)[0], 'subscriber')})
 
-                    app.currentID = UUID
-                else:
-                    app.currentID = UUID
+            #         app.currentID = UUID
+            #     else:
+            #         app.currentID = UUID
+            if len(app.userDict.get(UUID)) > 0:
+                dataJSON = json.dumps({"text": app.userDict.get(UUID).popleft()})
+                yield "event: ping\ndata:{}\n\n".format(dataJSON)
 
     return Response(eventstream(UUID), mimetype="text/event-stream")
 
