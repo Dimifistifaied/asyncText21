@@ -1,19 +1,50 @@
 let UUID = null;
 let eventResponse = null;
 
-generateUUId().then(function() {
-    eventResponse = sse();
-});
+async function generateUUId() {
+    UUID = await (await fetch('/generateUUID')).text()
+}
 
-sendText();
+function initSSE() {
+    const evtSource = new EventSource(`/stream/${UUID}`);
+    evtSource.addEventListener("ping", function(event) {
+        document.getElementById('textArea').value = JSON.parse(event.data).text;
+    });
+    return evtSource
+}
 
+function createEventListener() {
+    const textArea = document.getElementById('textArea');
 
-function sendToAPI(responseArea, text) {
+    function updateValue(e) {
+        const data = {
+            text: textArea.value,
+            user: UUID
+        }
+        postData('/save', data)
+    }
+
+    textArea.addEventListener('keydown', updateValue);
+}
+
+function executionPress(){
+    const button = document.getElementById('buttonClick')
+
+        function exec(e){
+            executePythonCode(document.getElementById('outputArea').value, document.getElementById('textArea').value)
+        }
+
+    button.addEventListener('click',exec)
+
+}
+
+function executePythonCode(responseArea, text) {
     const data = {
         text: text
     }
-    responseArea = postData('/post', data, 'yes')
+    responseArea = postData('/exec', data, 'yes')
 }
+
 async function postData(url = '', data = {}, compile) {
     // Default options are marked with *
     const response = await fetch(url, {
@@ -35,39 +66,10 @@ async function postData(url = '', data = {}, compile) {
     }
 }
 
-async function updateTextArea(data) {
-    const response = await fetch('/get')
-    const text = await response.text()
-    document.getElementById('textArea').value = text
-}
+generateUUId().then(function() {
+    eventResponse = initSSE();
+});
 
-function sse() {
-    const evtSource = new EventSource(`/stream/${UUID}`);
-    evtSource.addEventListener("ping", function(event) {
-        document.getElementById('textArea').value = JSON.parse(event.data).text;
-    });
-    return evtSource
-}
+createEventListener();
 
-function sendText() {
-    const textArea = document.getElementById('textArea');
-
-
-    function updateValue(e) {
-        saveText(textArea.value, UUID)
-    }
-
-    textArea.addEventListener('keydown', updateValue);
-}
-
-function saveText(text, UUID) {
-    const data = {
-        text: text,
-        user: UUID
-    }
-    postData('/save', data)
-}
-
-async function generateUUId() {
-    UUID = await (await fetch('/generateUUID')).text()
-}
+executionPress();

@@ -6,16 +6,13 @@
   <title>The HTML5 Herald</title>
 </head>
 
-
-
 <body>
     <div>
             <p>Write python bellow:</p>
             <textarea id="textArea" rows="10" cols="60"></textarea>
 
                 <div>
-                    <button type="button" id="buttonClick" onclick="sendToAPI(getElementById('outputArea').value, getElementById('textArea').value)">Send to API!</button>
-                    <button type="button" id="buttonClick" onclick="updateTextArea()">Get response from API!</button>
+                    <button type="button" id="buttonClick">Send to API!</button>
                 </div>
             <script  src= 'js/API.js' type="text/javascript"></script>
     </div>
@@ -24,10 +21,6 @@
         <p>Python output:</p>
         <textarea id="outputArea" rows="10" cols="60"></textarea>
     </div>
-
-
-
-
 
 </body>
 
